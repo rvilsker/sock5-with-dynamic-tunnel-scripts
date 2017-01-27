@@ -1,0 +1,84 @@
+#!/bin/bash
+
+#-------------------------------------------------------------------------------------------------
+# Made by rvilsker@cisco.com for Mac or Linux.
+#-------------------------------------------------------------------------------------------------
+
+###-------------------------------------------------------------------------------------------------
+###This script does following:
+###-------------------------------------------------------------------------------------------------
+### 1. Create via plink secured connection (ssh) with dynamic tunneling.
+### 2. Create via chrome browsing with proxy over socks5 via script1 dynamic tunneling.
+### 3. Connect to all urls via tunnel and all traffic goes via jump server.
+### 4. Something like that but without setting it manually the settings in firefox: 
+## http://straightedgelinux.com/blog/howto/socks.html
+## https://calomel.org/firefox_ssh_proxy.html
+## http://www.devineloper.com/2013/08/28/setup-socks-proxy-android-without-root/
+##
+## LINUX SIMPLE SETUP:
+## https://makandracards.com/theogfx/3465-force-chrome-to-tunnel-dns-requests-through-a-ssh-socks-proxy
+## for debug chrome: 
+## https://www.chromium.org/developers/design-documents/network-stack/socks-proxy
+## jmx dynamic tunnel: https://bowerstudios.com/node/731
+## chrome://net-internals/#proxy
+## chrome://net-internals/#dns
+## chrome://net-internals/#events
+## chrome://net-internals/#export
+###-------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------
+###Installation setup variables below##
+#-------------------------------------------------------------------------------------------------
+### 1. JUMP HOST IP AND PORT
+### 2. JUMP HOST PASSWROD OR KEYS PATH.
+### 3. ADD URLS TO BE OPENED AUTOMATICALY BY CHROME.
+### 4. CHOOSE THE AUTHOTICATION WAY YOU ARE USING TO JUMP HOST.
+#-------------------------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------------------------
+# VIREABLES:
+#-------------------------------------------------------------------------------------------------
+
+## Use this path to your KEYS file if you use it to login into jump vm if you use keys.
+KEYS="/root/.ssh/ts_jump.ppk"
+JUMPHOST="jump-server-ip"
+JUMPPORT="22"
+USERNAME="root"
+PASSWORD="password"
+PROXYHOST="127.0.0.1"
+PROXYPORT="8888"
+
+#-------------------------------------------------------------------------------------------------
+# URLs:
+#-------------------------------------------------------------------------------------------------
+## user/passwd: test/test123 PrimeHome
+URL0=http://10.2.248.88/
+
+## user/passwd: Kibana
+URL1=http://192.168.65.166:5601
+#-------------------------------------------------------------------------------------------------
+ 
+#-------------------------------------------------------------------------------------------------
+# EXECUTE:
+#sample for linux call: ssh -D %PROXYHOST%:%PROXYPORT% %USERNAME%@%JUMPHOST% -v -p %JUMPPORT%
+#sample for mac: open -a "Google Chrome" --args --proxy-server="socks5://127.0.0.1:5555" --incognito
+# Ubutu: google-chrome http://google.com $URL0 $URL1
+#-------------------------------------------------------------------------------------------------
+echo "Starting SSH dynamic tunnel with $PROXYHOST:$PROXYPORT"
+#ssh -D 8888 server
+#ssh -D $PROXYHOST:$PROXYPORT $USERNAME@$JUMPHOST -v -p $JUMPPORT
+#ssphass -p $PASSWORD ssh -D $PROXYHOST:$PROXYPORT $USERNAME@$JUMPHOST -v -p $JUMPPORT
+#screen -dmS ProxyViaJump ssphass -p $PASSWORD ssh -D $PROXYHOST:$PROXYPORT $USERNAME@$JUMPHOST -v -p $JUMPPORT
+ssh -D $PROXYHOST:$PROXYPORT $USERNAME@$JUMPHOST -v -p $JUMPPORT
+
+
+#https://www.chromium.org/for-testers/command-line-flags
+#https://www.chromium.org/developers/how-tos/run-chromium-with-flags
+#http://peter.sh/experiments/chromium-command-line-switches/
+#http://www.commandlinefu.com/commands/view/6646/start-chrome-with-socks-on-mac-osx
+#/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --proxy-server=socks5://HOST:PORT
+echo "Starting Chromecast URLs over SOCKS5 proxy set to $PROXYHOST:$PROXYPORT"
+#google-chrome --proxy-server="socks5://localhost:8888" 
+#open -a "Google Chrome" --args --proxy-server="socks5://$PROXYHOST:$PROXYPORT" --incognito $URL0 $URL1
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --proxy-server=socks5://$PROXYHOST:$PROXYPORT
+
+#-------------------------------------------------------------------------------------------------

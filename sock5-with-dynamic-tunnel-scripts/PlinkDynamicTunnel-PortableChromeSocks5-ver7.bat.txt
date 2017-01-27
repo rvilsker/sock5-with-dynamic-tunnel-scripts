@@ -1,0 +1,86 @@
+::#-------------------------------------------------------------------------------------------------
+::#Made by rvilsker@cisco.com for Windows
+::#-------------------------------------------------------------------------------------------------
+
+::#-------------------------------------------------------------------------------------------------
+::#This script does following:
+::#-------------------------------------------------------------------------------------------------
+::# 1. Create via plink secured connection (ssh) with dynamic tunneling.
+::# 2. Create via chrome browsing with proxy over socks5 via script1 dynamic tunneling.
+::# 3. Connect to all urls via tunnel and all traffic goes via jump server.
+::# 4. Something like that but without setting it manually the settings in firefox: 
+:: http://straightedgelinux.com/blog/howto/socks.html
+:: https://calomel.org/firefox_ssh_proxy.html
+:: http://www.devineloper.com/2013/08/28/setup-socks-proxy-android-without-root/
+::
+:: LINUX SIMPLE SETUP:
+:: https://makandracards.com/theogfx/3465-force-chrome-to-tunnel-dns-requests-through-a-ssh-socks-proxy
+:: for debug chrome: 
+:: https://www.chromium.org/developers/design-documents/network-stack/socks-proxy
+:: jmx dynamic tunnel: https://bowerstudios.com/node/731
+:: chrome://net-internals/#proxy
+:: chrome://net-internals/#dns
+:: chrome://net-internals/#events
+:: chrome://net-internals/#export
+::#-------------------------------------------------------------------------------------------------
+
+::#-------------------------------------------------------------------------------------------------
+::#Installation setup variables below::
+::#-------------------------------------------------------------------------------------------------
+::# 1. PATH TO PLINK
+::# 2. PATH TO CHROME OR CHROME PORTABLE
+::# 3. PATH FOR TEMP CACHE FOLDER
+::# 4. JUMP HOST IP AND PORT
+::# 5. JUMP HOST PASSWROD OR KEYS PATH.
+::# 5. ADD URLS TO BE OPENED AUTOMATICALY BY CHROME.
+::# 6. CHOOSE THE AUTHOTICATION WAY YOU ARE USING TO JUMP HOST.
+::#-------------------------------------------------------------------------------------------------
+
+::#-------------------------------------------------------------------------------------------------
+:: VIREABLES:
+::#-------------------------------------------------------------------------------------------------
+ECHO OFF
+:: Use this path to PLINK file (http://the.earth.li/~sgtatham/putty/latest/x86/plink.exe)
+SET PLINK=C:\PORTABLE\SysEngTools\tunnel-socks5proxy-tool\Plink.exe
+:: Use this path to your KEYS file if you use it to login into jump vm.
+SET KEYS=C:\PORTABLE\SysEngTools\tunnel-socks5proxy-tool\keys\ts_jump.ppk
+:: Use this default CHROME path if you have chrome installed on you system
+SET CHROME=C:\PROGRA~2\Google\Chrome\Application\chrome.exe
+::SET CHROME=C:\PORTABLE\SysEngTools\tunnel-socks5proxy-tool\GoogleChromePortable\GoogleChromePortable.exe
+SET TEMPDATA=C:\Temp\ChromePortableTemp
+SET JUMPHOST=jump-server-ip
+SET JUMPPORT=22
+SET USERNAME=root
+SET PASSWORD=password
+SET PROXYHOST=127.0.0.1
+SET PROXYPORT=8888
+::#-------------------------------------------------------------------------------------------------
+
+::#-------------------------------------------------------------------------------------------------
+:: URLs:
+::#-------------------------------------------------------------------------------------------------
+:: user/passwd: test/test PrimeHome
+SET URL0=http://10.2.248.88/
+
+:: KIBANA: user/passwd
+SET URL1=http://192.168.65.166:5601
+::#-------------------------------------------------------------------------------------------------
+
+ 
+::#-------------------------------------------------------------------------------------------------
+:: EXECUTE:
+::#-------------------------------------------------------------------------------------------------
+echo STARTING DYNAMIC TUNNEL VIA %USERNAME%@%JUMPHOST% WITH PROXY SET TO %PROXYHOST%:%PROXYPORT% 
+::start %PLINK% -ssh -i %KEYS% %USERNAME%@%JUMPHOST% -P %JUMPPORT% -C -T -D %PROXYHOST%:%PROXYPORT% -N -v
+start %PLINK% -ssh -pw %PASSWORD% %USERNAME%@%JUMPHOST% -P %JUMPPORT% -C -T -D %PROXYHOST%:%PROXYPORT% -N -v
+
+::https://www.chromium.org/for-testers/command-line-flags
+::https://www.chromium.org/developers/how-tos/run-chromium-with-flags
+::http://peter.sh/experiments/chromium-command-line-switches/
+echo STARTING CHROME over SOCKS5 PROXY ON %PROXYHOST%:%PROXYPORT% AND OPENNING URLs
+echo Starting Chromecast URLs over SOCKS5 proxy set to %PROXYHOST%:%PROXYPORT% 
+start %CHROME% --proxy-server="socks5://"%PROXYHOST%:%PROXYPORT% -incognito -user-data-dir=%TEMPDATA% "%URL0%" "%URL1%"
+EXIT
+::#-------------------------------------------------------------------------------------------------
+
+
